@@ -44,32 +44,18 @@ class Line:
 
         draw.line(points, fill=0)
 
-def segments(x,y,r,n):
-    xmn = 999
-    xmx = -xmn
-    ymn = 999
-    ymx = -ymn
-    m = len(x)
-    for i in range(0,m):
-        if r[i]==-1:
-            if x[i] >= xmx:
-                xmx = x[i]
-            if x[i] <= xmn:
-                xmn = x[i]
-            if y[i] >= ymx:
-                ymx = y[i]
-            if y[i] <= ymn:
-                ymn = y[i]
-    dx = (xmx-xmn)/n
-    dy = (ymx-ymn)/n
+def segments(x,y,r,n,frame):
+    dx = (frame.xmx-frame.xmn)/n
+    dy = (frame.ymx-frame.ymn)/n
 
     s=[]
     t=np.zeros(n*n,dtype=int)
-    for i in range(0,m):
+    for i in range(0,len(x)):
         if dx>0 and r[i]==-1:
-            px = int((x[i]-xmn)/dx)
-            py = int((y[i]-ymn)/dy)
+            px = int((x[i]-frame.xmn)/dx)
+            py = int((y[i]-frame.ymn)/dy)
             k = px*(n-1)+py
+            #print(px,py,n,k)
             t[k] = t[k]+1
             s.append(k)
         else:
@@ -78,7 +64,7 @@ def segments(x,y,r,n):
 
 def setall(x,y,r,k):
     cnt = 0
-    for i in range(1,len(x)):
+    for i in range(0,len(x)):
         if r[i]==-1:
            r[i] = k
            cnt = cnt + 1
@@ -86,7 +72,7 @@ def setall(x,y,r,k):
 
 def remove(x,y,r,k,line,d):
     cnt = 0
-    for i in range(1,len(x)):
+    for i in range(0,len(x)):
         if r[i]==k and line.distance(x[i],y[i])>d:
            r[i] = -1
            cnt = cnt + 1
@@ -94,7 +80,7 @@ def remove(x,y,r,k,line,d):
 
 def add(x,y,r,k,line,d):
     cnt = 0
-    for i in range(1,len(x)):
+    for i in range(0,len(x)):
         if r[i]==-1 and line.distance(x[i],y[i])<=d:
            r[i] = k
            cnt = cnt + 1
@@ -131,15 +117,24 @@ def regression(x,y,r,k):
     return line
 
 def find_lines(x,y,nseg,band,dbg=False):
+    frame = Line()
     r = []
     for i in range(0,len(x)):
         r.append(-1)
+        if frame.xmn>=x[i]:
+            frame.xmn=x[i]
+        if frame.xmx<=x[i]:
+            frame.xmx=x[i]
+        if frame.ymn>=y[i]:
+            frame.ymn=y[i]
+        if frame.ymx<=y[i]:
+            frame.ymx=y[i]
 
     n = 2
     l = 0
     lines=[]
     while n >=2:
-        s,t = segments(x,y,r,nseg)
+        s,t = segments(x,y,r,nseg,frame)
         if dbg:
             print(s,t)
         line = Line()
@@ -191,7 +186,7 @@ def find_lines(x,y,nseg,band,dbg=False):
 
             lines.append(line)
             l = l + 1
-    return lines, r
+    return frame, lines, r
 
 def drawPoints(x, y, r, draw, frame, dx, dy, dr):
     points =[]
@@ -223,18 +218,7 @@ def test():
         x.append(xp)
         y.append(yp)
 
-    frame = Line()
-    for i in range(0,len(x)):
-        if frame.xmn>=x[i]:
-            frame.xmn=x[i]
-        if frame.xmx<=x[i]:
-            frame.xmx=x[i]
-        if frame.ymn>=y[i]:
-            frame.ymn=y[i]
-        if frame.ymx<=y[i]:
-            frame.ymx=y[i]
-    
-    lines, r =find_lines(x,y,2,3)    
+    frame, lines, r =find_lines(x,y,2,3)    
     im= Image.new("RGB", (648, 648), "#FFFFFF")
     draw = ImageDraw.Draw(im)
 
