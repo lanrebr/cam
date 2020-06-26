@@ -29,7 +29,7 @@ class Line:
     def __str__(self):
        return  'a={:f} b={:f} c={:f} d={:f} n={} x=({:f},{:f}) y=({:f},{:f})'.format(self.a, self.b,self.c,self.d,self.n, self.xmn,self.xmx,self.ymn,self.ymx)
 
-    def draw(self, draw, frame, dx, dy):
+    def graph(self, draw, frame, dx, dy):
         points =[]
         sx = dx/(frame.xmx - frame.xmn)
         sy= dy/(frame.ymx - frame.ymn)
@@ -42,7 +42,7 @@ class Line:
         y = (self.y(self.xmx) - frame.ymn)*sy
         points.append((x,y))        
 
-        draw.line(points, fill=0)
+        draw.line(points, fill="blue", width=3)
 
 def segments(x,y,r,n,frame):
     dx = (frame.xmx-frame.xmn)/n
@@ -108,6 +108,9 @@ def regression(x,y,r,k):
     ey2 = n * sy2 - sy * sy
     et2 = n * sxy - sx * sy
 
+    if n==0 or ex2 ==0 or ey2 == 0:
+        return line
+
     line.a = et2 / ex2
     line.b = (sy - line.a * sx)/n
     line.c = et2 / ey2
@@ -116,7 +119,7 @@ def regression(x,y,r,k):
 
     return line
 
-def find_lines(x,y,nseg,band,dbg=False):
+def find_lines(x,y,max,nseg,band,dbg=False):
     frame = Line()
     r = []
     for i in range(0,len(x)):
@@ -133,7 +136,7 @@ def find_lines(x,y,nseg,band,dbg=False):
     n = 2
     l = 0
     lines=[]
-    while n >=2:
+    while len(lines)<max and n >=2:
         s,t = segments(x,y,r,nseg,frame)
         if dbg:
             print(s,t)
@@ -144,34 +147,38 @@ def find_lines(x,y,nseg,band,dbg=False):
                 rline= regression(x,y,s,i)
                 if dbg:
                     print("S",str(rline))
-                if line.d <= rline.d:
+                if rline.n > 0 and line.d <= rline.d:
                     line = rline
 
         dx = band
         n = line.n
-        if n>=2:
+        if n>2:
             if dbg:
                 print("F",str(line))
             while dx > 0.2*band:
-                add(x,y,r,l,line,dx)
-                aline = regression(x,y,r,l)
-                if dbg:
-                    print(aline)
-                remove(x,y,r,l,aline,0.5*dx)
-                cline = regression(x,y,r,l)
-                if dbg:
-                    print(cline)
-                add(x,y,r,l,cline,0.3*dx)
-                nline= regression(x,y,r,l)
-                if dbg:
-                    print(nline)
-                chg = abs(nline.d-aline.d)
+                chg = 0.0
+                if add(x,y,r,l,line,dx) > 0:
+                    aline = regression(x,y,r,l)
+                    if dbg:
+                        print(aline)
+                    remove(x,y,r,l,aline,0.5*dx)
+                    cline = regression(x,y,r,l)
+                    if dbg:
+                        print(cline)
+                    add(x,y,r,l,cline,0.3*dx)
+                    nline= regression(x,y,r,l)
+                    if dbg:
+                        print(nline)
+                    chg = abs(nline.d-aline.d)
                 if chg<0.01:
                     dx = 0.0
                 else:
                     dx = dx * 0.5
                 line=nline
 
+            if line.n == 0:
+                break
+            
             for i in range(0,len(x)):
                 if r[i]==l:
                     s[i]=-1
@@ -183,12 +190,12 @@ def find_lines(x,y,nseg,band,dbg=False):
                         line.ymn=y[i]
                     if line.ymx<=y[i]:
                         line.ymx=y[i]
-
+            print(str(line))
             lines.append(line)
             l = l + 1
     return frame, lines, r
 
-def drawPoints(x, y, r, draw, frame, dx, dy, dr):
+def graphPoints(x, y, r, draw, frame, dx, dy, dr):
     points =[]
 
     sx = dx/(frame.xmx - frame.xmn)
@@ -218,18 +225,17 @@ def test():
         x.append(xp)
         y.append(yp)
 
-    frame, lines, r =find_lines(x,y,2,3)    
-    im= Image.new("RGB", (648, 648), "#FFFFFF")
-    draw = ImageDraw.Draw(im)
-
+    frame, lines, r =find_lines(x,y,5,2,3)    
     for line in lines:
         print(line) 
     print(r)
 
+    im= Image.new("RGB", (648, 648), "#FFFFFF")
+    draw = ImageDraw.Draw(im)
     for line in lines:
-        line.draw(draw, frame, 648, 648)
+        line.graph(draw, frame, 648, 648)
 
-    drawPoints(x,y,r,draw,frame,648,648,3)
+    graphPoints(x,y,r,draw,frame,648,648,3)
 
     filename = "linear.jpg"
     try:
