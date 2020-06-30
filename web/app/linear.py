@@ -26,6 +26,53 @@ class Line:
         d = math.sqrt(dx*dx+dy*dy)
         return d
     
+    def init(self):
+        dx = self.xmx-self.xmn
+        dy = self.ymx-self.ymn
+        a = 0.0
+        if dx!=0.0:
+            a = dy/dx
+        b = self.ymn-a*self.xmn
+        self.a = a
+        self.b = b
+        self.n = 2
+
+    def near(self, l, th):
+        xmn = (self.a*(l.ymn-self.b) + l.xmn)/(1+self.a*self.a)
+        xmx = (self.a*(l.ymx-self.b) + l.xmx)/(1+self.a*self.a)
+        ds = 0.0
+        if xmn > self.xmx:
+            dx = self.xmx - l.xmn
+            dy = self.ymx - l.ymn
+            ds = math.sqrt(dx*dx + dy*dy)
+        elif  xmx < self.xmn:
+            dx = self.xmn - l.xmx
+            dy = self.ymn - l.ymx
+            ds = math.sqrt(dx*dx + dy*dy)
+        if ds < th:
+            return True
+        return False
+
+    def aligned(self, l, th):
+        dn = self.distance(l.xmn, l.ymn)
+        dx = self.distance(l.xmx, l.ymx)
+        if dn<th and dx<th:
+            return True
+        return False
+
+    def merge(self, l):
+        self.a = (self.n * self.a + l.n * l.a)/(self.n + l.n)
+        self.b = (self.n * self.b + l.n * l.b)/(self.n + l.n)
+        self.n = self.n + l.n
+
+        if self.xmn > l.xmn:
+            self.xmn = l.xmn
+        if self.xmx < l.xmx:
+            self.xmx = l.xmx
+        
+        self.ymn = self.xmn * self.a + self.b
+        self.ymx = self.xmx * self.a + self.b
+
     def __str__(self):
        return  'a={:f} b={:f} c={:f} d={:f} n={} x=({:f},{:f}) y=({:f},{:f})'.format(self.a, self.b,self.c,self.d,self.n, self.xmn,self.xmx,self.ymn,self.ymx)
 
