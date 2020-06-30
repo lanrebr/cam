@@ -243,8 +243,6 @@ def find_lines(x,y,max,nseg,band,dbg=False):
     return frame, lines, r
 
 def graphPoints(x, y, r, draw, frame, dx, dy, dr):
-    points =[]
-
     sx = dx/(frame.xmx - frame.xmn)
     sy= dy/(frame.ymx - frame.ymn)
 
