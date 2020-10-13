@@ -54,6 +54,8 @@ def glines(img):
                     break
             if not found:
                 lines.append(l)
+    
+    
     return lines
 
 curt = time.time()

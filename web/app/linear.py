@@ -37,6 +37,47 @@ class Line:
         self.b = b
         self.n = 2
 
+    def intersect(self,l,th):
+        result = False
+        sp = 0
+        lp = 0
+        x = 99999.9
+        y = 99999.9
+        da = self.a - l.a
+        if da!=0:
+            db = self.b - l.b
+            x=-db/da
+            y=self.y(x)
+
+            dx = self.xmn - x
+            dy = self.ymn - y
+            ds = math.sqrt(dx*dx+dy*dy)
+            if ds < th:
+               sp = 1
+            else:
+                dx = self.xmx - x
+                dy = self.ymx - y
+                ds = math.sqrt(dx*dx+dy*dy)
+                if ds < th:
+                    sp =2
+
+            dx = l.xmn - x
+            dy = l.ymn - y
+            ds = math.sqrt(dx*dx+dy*dy)
+            if ds < th:
+               lp = 1
+            else:
+                dx = l.xmx - x
+                dy = l.ymx - y
+                ds = math.sqrt(dx*dx+dy*dy)
+                if ds < th:
+                    lp =2  
+
+            if sp > 0 and lp >0:
+                result = True
+        
+        return result,sp,lp,x,y
+
     def near(self, l, th):
         xmn = (self.a*(l.ymn-self.b) + l.xmn)/(1+self.a*self.a)
         xmx = (self.a*(l.ymx-self.b) + l.xmx)/(1+self.a*self.a)
